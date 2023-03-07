@@ -1,0 +1,22 @@
+{
+  "name": "scrum-app-api",
+  "version": "1.0.0",
+  "description": "A Scrum App builded with express and sequelize",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node src/index.js",
+    "start:dev": "nodemon src/index.js"
+  },
+  "author": "Igor Sprovieri",
+  "license": "ISC",
+  "dependencies": {
+    "dotenv": "^16.0.3",
+    "express": "^4.18.2",
+    "nodemon": "^2.0.21",
+    "pg": "^8.10.0",
+    "pg-hstore": "^2.3.4",
+    "sequelize": "^6.29.1",
+    "sucrase": "^3.29.0"
+  }
+}
