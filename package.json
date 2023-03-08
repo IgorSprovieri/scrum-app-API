@@ -6,7 +6,8 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "start": "node src/index.js",
-    "start:dev": "nodemon src/index.js"
+    "start:dev": "nodemon src/index.js",
+    "config": "sucrase-node src/config/init.js"
   },
   "author": "Igor Sprovieri",
   "license": "ISC",
@@ -18,5 +19,8 @@
     "pg-hstore": "^2.3.4",
     "sequelize": "^6.29.1",
     "sucrase": "^3.29.0"
+  },
+  "devDependencies": {
+    "sequelize-cli": "^6.6.0"
   }
 }
