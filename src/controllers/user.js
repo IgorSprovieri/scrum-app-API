@@ -1,16 +1,48 @@
-import { users } from "../models/users";
+import { users } from "../models";
+import { object, string, number, date, InferType } from "yup";
+import bcrypt from "bcrypt";
 
 class userController {
-  async post(req, res) {
+  async create(req, res) {
     try {
-      const result = await users.create({
-        name: "bbb",
-        email: "ssss@aa.com",
+      const schema = object({
+        name: string().required(),
+        email: string().email().required(),
+        password: string().required(),
       });
 
-      return res.status(200).json(result);
+      await schema.validate(req.body);
+
+      const { name, email, password } = req.body;
+
+      const userFound = await users.findOne({ where: { email: email } });
+
+      if (userFound) {
+        return res.status(400).json({ error: "User Already Exists" });
+      }
+
+      const password_hash = bcrypt.hashSync(password, 10);
+
+      const result = await users.create({
+        name: name,
+        email: email,
+        password: "",
+        password_hash: password_hash,
+      });
+
+      if (!result) {
+        return res.status(500).json({ error: "User Not Created" });
+      }
+
+      return res.status(200).json({
+        user: {
+          id: result.id,
+          name: result.name,
+          email: result.email,
+        },
+      });
     } catch (error) {
-      return res.status(500).json(error);
+      return res.status(400).json({ error: error?.message });
     }
   }
 }
