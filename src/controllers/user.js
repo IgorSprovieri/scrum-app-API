@@ -34,13 +34,9 @@ class userController {
         return res.status(500).json({ error: "User Not Created" });
       }
 
-      return res.status(200).json({
-        user: {
-          id: result.id,
-          name: result.name,
-          email: result.email,
-        },
-      });
+      return res
+        .status(200)
+        .json({ id: result.id, name: result.name, email: result.email });
     } catch (error) {
       return res.status(400).json({ error: error?.message });
     }
