@@ -71,18 +71,8 @@ class userController {
 
       await schema.validate(req.body);
 
-      const { name, email, password } = req.body;
+      const { name, email } = req.body;
       const { userId } = req;
-
-      const user = await users.findByPk(userId);
-
-      if (!user) {
-        return res.status(500).json({ error: "User Not Created" });
-      }
-
-      if (name) {
-        user.name = name;
-      }
 
       if (email) {
         const userFound = await users.findOne({ where: { email: email } });
@@ -90,26 +80,27 @@ class userController {
         if (userFound) {
           return res.status(403).json({ error: "Email Aready Used" });
         }
-
-        user.email = email;
       }
 
-      if (password) {
-        const password_hash = bcrypt.hashSync(password, 10);
+      const result = await users.update(
+        { name: name, email: email },
+        {
+          where: {
+            id: userId,
+          },
+          returning: true,
+          plain: true,
+        }
+      );
 
-        user.password_hash = password_hash;
-      }
-
-      const result = await user.save();
-
-      if (!result) {
+      if (!result[1]) {
         return res.status(500).json({ error: "User Not Updated" });
       }
 
       return res.status(200).json({
-        id: user.id,
-        name: user.name,
-        email: user.email,
+        id: result[1].id,
+        name: result[1].name,
+        email: result[1].email,
       });
     } catch (error) {
       return res.status(400).json({ error: error?.message });

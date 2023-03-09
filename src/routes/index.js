@@ -12,5 +12,6 @@ router.use(auth);
 
 router.get("/user", userController.get);
 router.put("/user", userController.put);
+router.delete("/user", userController.delete);
 
 export default router;
