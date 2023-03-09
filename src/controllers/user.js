@@ -41,6 +41,28 @@ class userController {
       return res.status(400).json({ error: error?.message });
     }
   }
+
+  async get(req, res) {
+    try {
+      const { userId } = req;
+
+      const userFound = await users.findOne({ where: { id: userId } });
+
+      if (!userFound) {
+        return res.status(404).json({ error: "User Not Found" });
+      }
+
+      return res
+        .status(200)
+        .json({
+          id: userFound.id,
+          name: userFound.name,
+          email: userFound.email,
+        });
+    } catch (error) {
+      return res.status(400).json({ error: error?.message });
+    }
+  }
 }
 
 export default new userController();
