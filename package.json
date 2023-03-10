@@ -15,9 +15,11 @@
     "dotenv": "^16.0.3",
     "express": "^4.18.2",
     "jsonwebtoken": "^9.0.0",
+    "node-mailjet": "^6.0.2",
     "nodemon": "^2.0.21",
     "pg": "^8.10.0",
     "pg-hstore": "^2.3.4",
+    "random-token": "^0.0.8",
     "sequelize": "^6.29.1",
     "sucrase": "^3.29.0",
     "yup": "^1.0.2"
