@@ -1,12 +1,11 @@
 import { Router } from "express";
 import userController from "../controllers/user";
-import sessionController from "../controllers/session";
 import auth from "../middlewares/auth";
 const router = new Router();
 
-router.post("/user", userController.create);
-router.post("/login", sessionController.login);
-router.post("/forgot-password", sessionController.forgotPassword);
+router.post("/user", userController.post);
+router.post("/login", userController.login);
+router.post("/forgot-password", userController.forgotPassword);
 
 //----------------------- Autenticate Routes
 router.use(auth);
