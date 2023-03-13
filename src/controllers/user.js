@@ -4,6 +4,7 @@ import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import randomToken from "random-token";
 import { sendForgotEmail } from "../libs/mail";
+import { differenceInMinutes } from "date-fns";
 
 class User {
   id;
@@ -37,11 +38,20 @@ class User {
     try {
       const result = await users.findOne(whereParam(param));
       if (result) {
-        const { id, email, name, password_hash } = result;
+        const {
+          id,
+          email,
+          name,
+          password_hash,
+          reset_password_token,
+          reset_password_token_created_at,
+        } = result;
         this.id = id;
         this.email = email;
         this.name = name;
         this.password_hash = password_hash;
+        this.reset_password_token = reset_password_token;
+        this.reset_password_token_created_at = reset_password_token_created_at;
       }
       return result;
     } catch (error) {
@@ -91,7 +101,11 @@ class User {
   }
 
   async checkPassword(password) {
-    return await bcrypt.compare(password, this.password_hash);
+    try {
+      return await bcrypt.compare(password, this.password_hash);
+    } catch (error) {
+      return error;
+    }
   }
 
   gerenateJWT() {
@@ -103,10 +117,37 @@ class User {
   async sendForgotEmail() {
     try {
       const token = randomToken(6);
-      this.reset_password_token = token;
+      console.log(token);
+      this.reset_password_token = bcrypt.hashSync(token, 10);
       this.reset_password_token_created_at = new Date();
       await this.updateOnDB();
       return await sendForgotEmail(this.email, this.name, token);
+    } catch (error) {
+      return error;
+    }
+  }
+
+  async checkToken(token) {
+    try {
+      const result = await bcrypt.compare(token, this.reset_password_token);
+      if (!result) {
+        return false;
+      }
+      const difference = differenceInMinutes(
+        new Date(),
+        this.reset_password_token_created_at
+      );
+      return difference < 15;
+    } catch (error) {
+      return error;
+    }
+  }
+
+  async changePassword(password) {
+    try {
+      this.password = "";
+      this.password_hash = bcrypt.hashSync(password, 10);
+      return await this.updateOnDB();
     } catch (error) {
       return error;
     }
@@ -259,7 +300,7 @@ class Controller {
         return res.status(403).json({ error: "User or password is invalid" });
       }
 
-      const checkPassword = user.checkPassword(password);
+      const checkPassword = await user.checkPassword(password);
 
       if (!checkPassword) {
         return res.status(403).json({ error: "User or password is invalid" });
@@ -289,15 +330,56 @@ class Controller {
       const { email } = req.body;
 
       const user = new User();
-      user.getOnDB(email);
+      await user.getOnDB(email);
+
+      if (!user.id) {
+        return res.status(404).json({ error: "User Not Found" });
+      }
+
+      const result = await user.sendForgotEmail();
+
+      if (!result) {
+        return res.status(500).json({ error: "Email Not Sent" });
+      }
+
+      return res.status(200).json({ email: user.email });
+    } catch (error) {
+      return res.status(400).json({ error: error?.message });
+    }
+  }
+
+  async resetPassword(req, res) {
+    try {
+      const schema = object({
+        email: string().email().required(),
+        token: string().required(),
+        password: string().required(),
+      });
+
+      await schema.validate(req.body);
+
+      const { email, token, password } = req.body;
+
+      const user = new User();
+      await user.getOnDB(email);
 
       if (!user.id) {
         return res.status(404).json({ error: "User not found" });
       }
 
-      await user.sendForgotEmail();
+      const tokenResult = await user.checkToken(token);
 
-      return res.status(200).json({ email: email });
+      if (!tokenResult) {
+        return res.status(403).json({ error: "Token Not Valid" });
+      }
+
+      const result = await user.changePassword(password);
+
+      if (!result) {
+        return res.status(500).json({ error: "Password Not Updated" });
+      }
+
+      return res.status(200).json({ sucess: true });
     } catch (error) {
       return res.status(400).json({ error: error?.message });
     }
