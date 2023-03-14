@@ -2,7 +2,8 @@ import { Router } from "express";
 import userController from "../controllers/users";
 import projectController from "../controllers/projects";
 import usersProjectsController from "../controllers/usersprojects";
-import auth from "../middlewares/auth";
+import authMiddleware from "../middlewares/auth";
+import userMiddleware from "../middlewares/user";
 const router = new Router();
 
 router.post("/user", userController.post);
@@ -11,7 +12,8 @@ router.post("/forgot-password", userController.forgotPassword);
 router.post("/reset-password", userController.resetPassword);
 
 //----------------------- Autenticate Routes
-router.use(auth);
+router.use(authMiddleware.checkJWT);
+router.use(userMiddleware.checkUser);
 
 router.get("/user", userController.get);
 router.put("/user", userController.put);

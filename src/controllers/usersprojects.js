@@ -117,9 +117,9 @@ class ProjectUsers extends UserProject {
 class Controller {
   async getUserProjects(req, res) {
     try {
-      const { userId } = req;
+      const { user } = req;
 
-      const userProjects = new UserProjects({ userId: userId });
+      const userProjects = new UserProjects({ userId: user.id });
       await userProjects.getOnDB();
 
       return res.status(200).json(userProjects);
@@ -130,10 +130,16 @@ class Controller {
 
   async getProjectUsers(req, res) {
     try {
-      const { id } = req.params;
-      const { userId } = req;
+      const schema = object({
+        id: number().required().positive().integer(),
+      });
 
-      const userproject = new UserProject({ userId: userId, projectId: id });
+      await schema.validate(req.params);
+
+      const { id } = req.params;
+      const { user } = req;
+
+      const userproject = new UserProject({ userId: user.id, projectId: id });
 
       if (!userproject) {
         return res.status(403).json({ error: "Acess Denied" });

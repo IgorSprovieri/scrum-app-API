@@ -122,7 +122,6 @@ export class User {
   async sendForgotEmail() {
     try {
       const token = randomToken(6);
-      console.log(token);
       this.reset_password_token = bcrypt.hashSync(token, 10);
       this.reset_password_token_created_at = new Date();
       await this.updateOnDB();
@@ -196,14 +195,7 @@ class Controller {
 
   async get(req, res) {
     try {
-      const { userId } = req;
-
-      const user = new User({ id: userId });
-      const userFound = await user.getOnDB();
-
-      if (!userFound) {
-        return res.status(404).json({ error: "User Not Found" });
-      }
+      const { user } = req;
 
       return res.status(200).json({
         id: user.id,
@@ -225,23 +217,16 @@ class Controller {
       await schema.validate(req.body);
 
       const { name, email } = req.body;
-      const { userId } = req;
-
-      const user = new User({ id: userId });
-      const userFound = await user.getOnDB();
-
-      if (!userFound) {
-        return res.status(404).json({ error: "User Not Found" });
-      }
+      const { user } = req;
 
       if (name) {
         user.name = name;
       }
 
       if (email) {
-        const userFound = await users.findOne({ where: { email: email } });
+        const alreadyUsed = await users.findOne({ where: { email: email } });
 
-        if (userFound) {
+        if (alreadyUsed) {
           return res.status(403).json({ error: "Email Aready Used" });
         }
 
@@ -266,14 +251,7 @@ class Controller {
 
   async delete(req, res) {
     try {
-      const { userId } = req;
-
-      const user = new User({ id: userId });
-      const userFound = await user.getOnDB();
-
-      if (!userFound) {
-        return res.status(404).json({ error: "User Not Found" });
-      }
+      const { user } = req;
 
       const result = await user.deleteOnDB();
 

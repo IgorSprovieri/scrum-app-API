@@ -1,6 +1,5 @@
-import { projects, userProjects, users } from "../models";
+import { projects } from "../models";
 import { object, string, number, date, InferType } from "yup";
-import { User } from "./users";
 import { UserProject } from "./usersProjects";
 
 class Project {
@@ -45,14 +44,7 @@ class Controller {
       await schema.validate(req.body);
 
       const { projectName, description } = req.body;
-      const { userId } = req;
-
-      const user = new User({ id: userId });
-      const userFound = await user.getOnDB();
-
-      if (!userFound) {
-        return res.status(404).json({ error: "User Not Found" });
-      }
+      const { user } = req;
 
       const project = new Project({
         projectName: projectName,
