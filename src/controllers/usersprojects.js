@@ -65,16 +65,29 @@ class UserProjects extends UserProject {
         ],
       });
 
-      result.forEach((element) => {
+      for (const element of result) {
+        const users = [];
+        const projectUsers = new ProjectUsers({
+          projectId: result[0].projects.id,
+        });
+        await projectUsers.getOnDB();
+        projectUsers.users.forEach((e) => {
+          users.push({
+            name: e.name,
+            avatarUrl: e.avatar_url,
+          });
+        });
         this.projects.push({
           id: element.projects.id,
-          project_name: element.projects.project_name,
+          projectName: element.projects.project_name,
           description: element.projects.description,
+          users: users,
           createdAt: element.projects.createdAt,
           updatedAt: element.projects.updatedAt,
-          is_admin: element.is_admin,
+          isAdmin: element.is_admin,
         });
-      });
+      }
+
       return result;
     } catch (error) {
       return error;
@@ -101,7 +114,7 @@ class ProjectUsers extends UserProject {
 
       result.forEach((element) => {
         this.users.push({
-          user_project_id: element.user.id,
+          userProjectId: element.id,
           name: element.user.name,
           avatar_url: element.user.avatar_url,
           is_admin: element.is_admin,
@@ -137,9 +150,9 @@ class Controller {
       await schema.validate(req.params);
 
       const { id } = req.params;
-      const { user } = req;
+      const { userId } = req;
 
-      const userproject = new UserProject({ userId: user.id, projectId: id });
+      const userproject = new UserProject({ userId: userId, projectId: id });
 
       if (!userproject) {
         return res.status(403).json({ error: "Acess Denied" });

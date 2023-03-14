@@ -17,7 +17,10 @@ export class User {
   avatar_url;
 
   constructor(data) {
-    const { name, email, password } = data;
+    const { id, name, email, password } = data;
+    if (id) {
+      this.id = id;
+    }
     if (name) {
       this.name = name;
     }
@@ -39,7 +42,7 @@ export class User {
     }
 
     try {
-      const result = await users.findOne({ whereParam });
+      const result = await users.findOne(whereParam);
       if (result) {
         const {
           id,
