@@ -1,5 +1,7 @@
 import { Router } from "express";
-import userController from "../controllers/user";
+import userController from "../controllers/users";
+import projectController from "../controllers/projects";
+import usersProjectsController from "../controllers/usersprojects";
 import auth from "../middlewares/auth";
 const router = new Router();
 
@@ -15,4 +17,7 @@ router.get("/user", userController.get);
 router.put("/user", userController.put);
 router.delete("/user", userController.delete);
 
+router.post("/project", projectController.createProject);
+router.get("/user-projects", usersProjectsController.getUserProjects);
+router.get("/project-users/:id", usersProjectsController.getProjectUsers);
 export default router;

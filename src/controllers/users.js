@@ -6,7 +6,7 @@ import randomToken from "random-token";
 import { sendForgotEmail } from "../libs/mail";
 import { differenceInMinutes } from "date-fns";
 
-class User {
+export class User {
   id;
   email;
   name;
@@ -14,8 +14,10 @@ class User {
   password_hash;
   reset_password_token;
   reset_password_token_created_at;
+  avatar_url;
 
-  constructor(name, email, password) {
+  constructor(data) {
+    const { name, email, password } = data;
     if (name) {
       this.name = name;
     }
@@ -28,15 +30,16 @@ class User {
     }
   }
 
-  async getOnDB(param) {
-    const whereParam = (p) => {
-      if (Number(p)) {
-        return { where: { id: Number(p) } };
-      }
-      return { where: { email: p } };
-    };
+  async getOnDB() {
+    let whereParam;
+    if (this.id) {
+      whereParam = { where: { id: this.id } };
+    } else {
+      whereParam = { where: { email: this.email } };
+    }
+
     try {
-      const result = await users.findOne(whereParam(param));
+      const result = await users.findOne({ whereParam });
       if (result) {
         const {
           id,
@@ -45,6 +48,7 @@ class User {
           password_hash,
           reset_password_token,
           reset_password_token_created_at,
+          avatar_url,
         } = result;
         this.id = id;
         this.email = email;
@@ -52,6 +56,7 @@ class User {
         this.password_hash = password_hash;
         this.reset_password_token = reset_password_token;
         this.reset_password_token_created_at = reset_password_token_created_at;
+        this.avatar_url = avatar_url;
       }
       return result;
     } catch (error) {
@@ -173,7 +178,7 @@ class Controller {
         return res.status(400).json({ error: "User Already Exists" });
       }
 
-      const user = new User(name, email, password);
+      const user = new User({ name: name, email: email, password: password });
 
       const result = await user.createOnDB();
 
@@ -183,7 +188,7 @@ class Controller {
 
       return res
         .status(201)
-        .json({ id: result.id, name: result.name, email: result.email });
+        .json({ id: user.id, name: user.name, email: user.email });
     } catch (error) {
       return res.status(400).json({ error: error?.message });
     }
@@ -193,10 +198,10 @@ class Controller {
     try {
       const { userId } = req;
 
-      const user = new User();
-      await user.getOnDB(userId);
+      const user = new User({ id: userId });
+      const userFound = await user.getOnDB();
 
-      if (!user.id) {
+      if (!userFound) {
         return res.status(404).json({ error: "User Not Found" });
       }
 
@@ -222,10 +227,10 @@ class Controller {
       const { name, email } = req.body;
       const { userId } = req;
 
-      const user = new User();
-      await user.getOnDB(userId);
+      const user = new User({ id: userId });
+      const userFound = await user.getOnDB();
 
-      if (!user.id) {
+      if (!userFound) {
         return res.status(404).json({ error: "User Not Found" });
       }
 
@@ -263,10 +268,10 @@ class Controller {
     try {
       const { userId } = req;
 
-      const user = new User();
-      await user.getOnDB(userId);
+      const user = new User({ id: userId });
+      const userFound = await user.getOnDB();
 
-      if (!user.id) {
+      if (!userFound) {
         return res.status(404).json({ error: "User Not Found" });
       }
 
@@ -292,9 +297,9 @@ class Controller {
       await schema.validate(req.body);
 
       const { email, password } = req.body;
-      const user = new User();
 
-      const userFound = await user.getOnDB(email);
+      const user = new User({ email: email });
+      const userFound = await user.getOnDB();
 
       if (!userFound) {
         return res.status(403).json({ error: "User or password is invalid" });
@@ -329,10 +334,10 @@ class Controller {
 
       const { email } = req.body;
 
-      const user = new User();
-      await user.getOnDB(email);
+      const user = new User({ email: email });
+      const userFound = await user.getOnDB();
 
-      if (!user.id) {
+      if (!userFound) {
         return res.status(404).json({ error: "User Not Found" });
       }
 
@@ -360,11 +365,11 @@ class Controller {
 
       const { email, token, password } = req.body;
 
-      const user = new User();
-      await user.getOnDB(email);
+      const user = new User({ email: email });
+      const userFound = await user.getOnDB();
 
-      if (!user.id) {
-        return res.status(404).json({ error: "User not found" });
+      if (!userFound) {
+        return res.status(404).json({ error: "User Not Found" });
       }
 
       const tokenResult = await user.checkToken(token);
